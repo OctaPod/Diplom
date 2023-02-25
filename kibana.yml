@@ -1,0 +1,61 @@
+---
+- hosts: kibana
+
+#  vars:
+#    ip_address_kibana: "{{ hostvars.kibana.ansible_host  }}"
+#    ip_address_elastic: "{{ hostvars.elasticsearch.ansible_host  }}"
+
+  tasks:    
+    - name: Copying a file kibana-8.5.3-amd64.deb
+      copy:
+        src: /home/islamgaleev/Diplom/kibana-8.5.3-amd64.deb
+        dest: /home/qwerbo/
+        remote_src: false
+        mode: 0775
+        owner: qwerbo
+        group: qwerbo
+ 
+    - name: Install "kibana" package kibana-8.5.3-amd64.deb
+      apt:
+        deb: /home/qwerbo/kibana-8.5.3-amd64.deb
+        update_cache: yes
+        
+    - name: Systemd daemon_reload
+      systemd:
+        daemon_reload: yes
+
+    - name: Make sure a service kibana is running
+      systemd:
+        state: started
+        name: kibana
+
+    - name: enable service kibana and ensure it is not masked
+      systemd:
+        name: kibana
+        enabled: yes
+        masked: no
+
+    - name: config format kibana (add server.host)
+      become: yes
+      remote_user: qwerbo
+      become_method: sudo
+      lineinfile:
+        dest: /etc/kibana/kibana.yml
+        insertbefore: '^\s*#server.host'
+        line: 'server.host: "0.0.0.0"'
+        state: present
+
+    - name: config format kibana (add elasticsearch.host)
+      lineinfile:
+        dest: /etc/kibana/kibana.yml
+        insertbefore: '^\s*#elasticsearch.hosts'
+        line: 'elasticsearch.hosts: ["http://10.0.3.12:9200"]'
+        state: present
+
+    - name: restarted service kibana
+      systemd:
+        name: kibana
+        state: restarted
+
+  become: yes
+  become_method: sudo

@@ -1,0 +1,12 @@
+---
+- hosts: web1 web2 
+  remote_user: qwerbo
+  become: yes
+  become_method: sudo
+
+
+
+
+  roles: 
+    - ansible-node-exporter
+    

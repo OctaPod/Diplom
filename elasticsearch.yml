@@ -1,0 +1,65 @@
+---
+- hosts: elastic
+#  become: yes
+  remote_user: qwerbo
+#  become_method: True
+#  vars:
+#  ip_address: "{{ hostvars.elastic.ansible_host }}"
+  tasks:
+
+
+  - name: Copy Cert File If Different
+    copy:
+      src: /home/islamgaleev/Diplom/elasticsearch-8.5.3-amd64.deb
+      dest: /home/qwerbo/
+      remote_src: false
+      mode: 0775
+      owner: qwerbo
+      group: qwerbo
+ 
+  - name: Install "elastic"
+    apt:
+      deb: /home/qwerbo/elasticsearch-8.5.3-amd64.deb
+
+
+  - name: Update repositories cache and install "elasticsearch" package
+    apt:
+      name: elasticsearch
+      update_cache: yes
+
+  - name: Systemd daemon_reload
+    systemd:
+      daemon_reload: yes
+
+  - name: Make sure a service is running
+    systemd:
+      state: started
+      name: elasticsearch
+
+  - name: enable service elasticsearch and ensure it is not masked
+    systemd:
+      name: elasticsearch
+      enabled: yes
+      masked: no
+
+  - name: config format elasticsearch (add network.host)
+    lineinfile:
+      dest: /etc/elasticsearch/elasticsearch.yml
+      insertbefore: '^\s*#network.host'
+      line: 'network.host: 10.0.3.12'
+      state: present
+
+  - name: config  format elasticsearch (add discovery.seed_hosts)
+    lineinfile:
+      dest: /etc/elasticsearch/elasticsearch.yml
+      insertafter: '^\s*#discovery.seed_hosts'
+      line: 'discovery.seed_hosts: 10.0.3.12'
+      state: present
+
+  - name: restarted service elasticsearch
+    systemd:
+      state: restarted
+      name: elasticsearch
+
+  become: yes
+  become_method: sudo

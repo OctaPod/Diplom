@@ -1,0 +1,192 @@
+- hosts: web1
+  become: yes
+  remote_user: qwerbo
+  become_method: sudo
+  vars:
+    ip_address_webserver1: "10.0.1.3"
+    ip_address_elasticsearch: "10.0.3.12"
+    ip_address_kibana: '10.0.10.13'  
+  tasks:      
+  - name: Copy Cert File If Different
+    copy:
+      src: /home/islamgaleev/Diplom/filebeat-8.5.3-amd64.deb
+      dest: /home/qwerbo/
+      remote_src: false
+      mode: 0775
+      owner: qwerbo
+      group: qwerbo
+ 
+  - name: Install "filebeat" package filebeat-8.5.3-amd64.deb
+    apt:
+      deb: /home/qwerbo/filebeat-8.5.3-amd64.deb
+
+  - name: Systemd daemon_reload
+    systemd:
+      daemon_reload: yes
+
+  - name: Make sure a service filebeat is running
+    systemd:
+      state: started
+      name: filebeat
+
+  - name: enable service filebeat and ensure it is not masked
+    systemd:
+      name: filebeat
+      enabled: yes
+      masked: no
+
+  - name: Delete filebeat.yml
+    file:
+      path: "/etc/filebeat/filebeat.yml"
+      state: absent
+
+  - name: Touch filebeat.yml
+    file:
+      path: "/etc/filebeat/filebeat.yml"
+      owner: root
+      group: root
+      mode: 0644
+      state: touch
+  
+  - name: Create file Add text with filebeat.yml (access.log)
+    blockinfile:
+      path: /etc/filebeat/filebeat.yml
+      marker: '##'
+      block: |
+        {{ item }}
+    with_items:
+      - 'filebeat.inputs:'
+      - '  - type: log'
+      - '    enabled: true'
+      - '    index: "filebeat-{{ ip_address_webserver1 }}-acccess"'
+      - '    paths:'
+      - '        - /var/log/nginx/access*.log'
+      - '    fields:'
+      - '      type: nginx_access'
+      - '    fields_under_root: true'
+      - '    scan_frequency: 5s'
+
+  - name: Add text with filebeat.yml (error.log)
+    blockinfile:
+      path: /etc/filebeat/filebeat.yml
+      marker: '##'
+      block: |
+        {{ item }}
+    with_items:
+      -  '  - type: log'
+      -  '    enabled: true'
+      -  '    index: "filebeat-{{ ip_address_webserver1 }}-error"'
+      -  '    paths:'
+      -  '        - /var/log/nginx/error*.log'
+      -  '    fields:'
+      -  '      type: nginx_error'
+      -  '    fields_under_root: true'
+      -  '    scan_frequency: 5s'
+      -  '#'
+      -  'output.elasticsearch:'
+      -  '   hosts: ["{{ ip_address_elasticsearch }}:9200"]'
+      -  'setup.kibana:'
+      -  '   hosts: "{{ ip_address_kibana }}:5601"'
+      -  'filebeat.config.modules.path: /etc/filebeat/modules.d/*.yml'      
+ 
+  - name: Make sure a service filebeat is running
+    systemd:
+      state: started
+      name: filebeat
+
+#------------------------------------WEB2--------------------------------------------------------------------
+- hosts: web2
+  become: yes
+  remote_user: qwerbo
+  become_method: sudo
+  vars:
+    ip_address_webserver2: "10.0.2.3"
+    ip_address_elasticsearch: "10.0.3.12"
+    ip_address_kibana: '10.0.10.13'        
+  tasks:      
+  - name: Copy Cert File If Different
+    copy:
+      src: /home/islamgaleev/Diplom/filebeat-8.5.3-amd64.deb
+      dest: /home/qwerbo/
+      remote_src: false
+      mode: 0775
+      owner: qwerbo
+      group: qwerbo
+ 
+  - name: Install "filebeat" package filebeat-8.5.3-amd64.deb
+    apt:
+      deb: /home/qwerbo/filebeat-8.5.3-amd64.deb
+
+  - name: Systemd daemon_reload
+    systemd:
+      daemon_reload: yes
+
+  - name: Make sure a service filebeat is running
+    systemd:
+      state: started
+      name: filebeat
+
+  - name: enable service filebeat and ensure it is not masked
+    systemd:
+      name: filebeat
+      enabled: yes
+      masked: no
+
+  - name: Delete filebeat.yml
+    file:
+      path: "/etc/filebeat/filebeat.yml"
+      state: absent
+
+  - name: Touch filebeat.yml
+    file:
+      path: "/etc/filebeat/filebeat.yml"
+      owner: root
+      group: root
+      mode: 0644
+      state: touch
+  
+  - name: Create file Add text with filebeat.yml (access.log)
+    blockinfile:
+      path: /etc/filebeat/filebeat.yml
+      marker: '##'
+      block: |
+        {{ item }}
+    with_items:
+      - 'filebeat.inputs:'
+      - '  - type: log'
+      - '    enabled: true'
+      - '    index: "filebeat-{{ ip_address_webserver2 }}-acccess"'
+      - '    paths:'
+      - '        - /var/log/nginx/access*.log'
+      - '    fields:'
+      - '      type: nginx_access'
+      - '    fields_under_root: true'
+      - '    scan_frequency: 5s'
+
+  - name: Add text with filebeat.yml (error.log)
+    blockinfile:
+      path: /etc/filebeat/filebeat.yml
+      marker: '##'
+      block: |
+        {{ item }}
+    with_items:
+      -  '  - type: log'
+      -  '    enabled: true'
+      -  '    index: "filebeat-{{ ip_address_webserver2 }}-error"'
+      -  '    paths:'
+      -  '        - /var/log/nginx/error*.log'
+      -  '    fields:'
+      -  '      type: nginx_error'
+      -  '    fields_under_root: true'
+      -  '    scan_frequency: 5s'
+      -  '#'
+      -  'output.elasticsearch:'
+      -  '   hosts: ["{{ ip_address_elasticsearch }}:9200"]'
+      -  'setup.kibana:'
+      -  '   hosts: "{{ ip_address_kibana }}:5601"'
+      -  'filebeat.config.modules.path: /etc/filebeat/modules.d/*.yml'
+ 
+  - name: Make sure a service filebeat is running
+    systemd:
+      state: started
+      name: filebeat

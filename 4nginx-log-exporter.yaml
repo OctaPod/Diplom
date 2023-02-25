@@ -1,0 +1,74 @@
+---
+
+- hosts: web1 web2
+  become: yes
+  become_method: sudo
+  remote_user: qwerbo 
+  tasks:
+  
+  - name: Download_Nginx_Log_Exporter
+    become: yes
+    get_url:
+      url: "https://github.com/martin-helmich/prometheus-nginxlog-exporter/releases/download/v1.10.0/prometheus-nginxlog-exporter_1.10.0_linux_amd64.deb"
+      dest: /home/qwerbo/ 
+      owner: qwerbo
+      group: qwerbo
+      mode: 755
+        
+  - name: Install_Nginx_Log_Exporter
+    become: yes
+    become_method: sudo
+    apt: deb="/home/qwerbo/prometheus-nginxlog-exporter_1.10.0_linux_amd64.deb"
+
+  - name: touch conf
+    become: yes
+    become_method: sudo
+    copy:
+      content: ""
+      dest: /home/qwerbo/prometheus-nginxlog-exporter.service
+      owner: root
+      group: root
+      mode: 0755
+    
+  - name: Simple config for PDF converter
+    become: yes
+    become_method: sudo 
+    blockinfile:
+      path: /home/qwerbo/prometheus-nginxlog-exporter.service
+      block: |
+           [Unit]
+           Description=Prometheus Log Exporter
+           Wants=network-online.target
+           After=network-online.target
+
+           [Service]
+           User=root
+           Group=root
+           Type=simple
+           ExecStart=/usr/sbin/prometheus-nginxlog-exporter -config-file /etc/prometheus-nginxlog-exporter.hcl
+
+           [Install]
+           WantedBy=multi-user.target
+
+  - name: move conf
+    become: yes
+    become_method: sudo
+    copy:
+      src: /home/qwerbo/prometheus-nginxlog-exporter.service
+      dest: /lib/systemd/system/prometheus-nginxlog-exporter.service
+      remote_src: true
+      owner: root
+      group: root
+      mode: 0755               
+
+  - name: daemon-reload
+    become: yes
+    become_method: sudo
+    command: systemctl daemon-reload
+
+  - name: Restart_Nginx_Log_Exporter
+    become: yes
+    become_method: sudo
+    service:
+      name: prometheus-nginxlog-exporter
+      state: restarted

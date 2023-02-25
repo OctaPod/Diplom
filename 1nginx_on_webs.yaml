@@ -1,0 +1,50 @@
+---
+- hosts: web1
+  remote_user: qwerbo
+  gather_facts: false
+  tasks:
+
+    - name: install nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+
+    - name: Copy website files
+      copy:
+        src: /home/islamgaleev/Diplom/site/server1/index.html
+        dest: /var/www/html/
+
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
+        
+  become: yes
+  become_method: sudo 
+
+- hosts: web2
+  remote_user: qwerbo
+  tasks:
+    - name: install nginx
+      apt:
+        name: nginx
+        state: latest
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+    - name: Copy website files
+      copy:
+        src: /home/islamgaleev/Diplom/site/server2/index.html
+        dest: /var/www/html/
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
+  become: yes
+  become_method: sudo
