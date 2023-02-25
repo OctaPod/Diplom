@@ -8,5 +8,5 @@
 
 
   roles: 
-    - ansible_node_exporter
+    - ansible-node-exporter
     
