@@ -4,3 +4,6 @@
 [submodule "roles/ansible-prometheus"]
 	path = roles/ansible-prometheus
 	url = https://github.com/cloudalchemy/ansible-prometheus.git
+[submodule "roles/ansible-node-exporter"]
+	path = roles/ansible-node-exporter
+	url = https://github.com/cloudalchemy/ansible-node-exporter.git
