@@ -6,7 +6,7 @@
 
 
   roles: 
-    - ansible-prometheus 
+    - ansible_prometheus 
   vars:
     prometheus_targets:
       node:
