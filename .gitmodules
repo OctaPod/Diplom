@@ -1,6 +1,3 @@
-[submodule "ansible-prometheus"]
-	path = ansible-prometheus
-	url = https://github.com/cloudalchemy/ansible-prometheus.git
 [submodule "roles/ansible-prometheus"]
 	path = roles/ansible-prometheus
 	url = https://github.com/cloudalchemy/ansible-prometheus.git
